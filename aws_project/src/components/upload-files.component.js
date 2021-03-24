@@ -69,26 +69,47 @@ export default class UploadFiles extends Component {
   }
 
   uploadFiles() {
-    const selectedFiles = this.state.selectedFiles;
+    var file = document.getElementById('selectedFile').files[0];
+        var filename = file.name;
+        console.log(filename);
+        //AAN TE PASSEN NAAR API + FILENAME
+        var url = 'http://URLNAARUWAPI' + filename;
+        var client = new HttpClient();
+        client.get(url, function (response) {
 
-    let _progressInfos = [];
+            var body = JSON.parse(response)
+            var preURL = body.url;
+            console.log(preURL)
 
-    for (let i = 0; i < selectedFiles.length; i++) {
-      _progressInfos.push({ percentage: 0, fileName: selectedFiles[i].name });
-    }
-
-    this.setState(
-      {
-        progressInfos: _progressInfos,
-        message: [],
-      },
-      () => {
-        for (let i = 0; i < selectedFiles.length; i++) {
-          this.upload(i, selectedFiles[i]);
-        }
+            //START PUT TO S3 BUCKET
+            var xhr = new XMLHttpRequest();
+            xhr.open('PUT', preURL, true);
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    console.log('Tis gelukt e!');
+                }
+            };
+            xhr.onerror = () => {
+                console.log('Kapoet')
+            };
+            xhr.send(file);
+        });
+        
+        var HttpClient = function () {
+          this.get = function (aUrl, aCallback) {
+              var anHttpRequest = new XMLHttpRequest();
+              anHttpRequest.onreadystatechange = function () {
+                  if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
+                      aCallback(anHttpRequest.responseText);
+              }
+  
+              anHttpRequest.open("GET", aUrl, true);
+              anHttpRequest.send(null);
+          }
       }
-    );
   }
+
+  
 
   render() {
       const { selectedFiles, progressInfos, message, fileInfos } = this.state;

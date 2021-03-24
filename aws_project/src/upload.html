@@ -1,0 +1,58 @@
+<html>
+<div class="input-group">
+    <div class="selected-file">
+        <input type="file" class="selected-file-input" id="selectedFile" aria-describedby="selectedFile">
+        <label class="selected-file-label" for="selectedFile">Bestand kiezen</label>
+    </div>
+    <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="button" id="selectedFile"
+            onclick="UploadObject()">Uploaden</button>
+    </div>
+</div>
+<script>
+    function UploadObject() {
+        var file = document.getElementById('selectedFile').files[0];
+        var filename = file.name;
+        console.log(filename);
+        //AAN TE PASSEN NAAR API + FILENAME
+        var url = 'https://a6yawyi7pj.execute-api.us-east-1.amazonaws.com/getPresignedURL?fileName=' + filename;
+        var client = new HttpClient();
+        client.get(url, function (response) {
+
+            //var body = JSON.parse(response)
+            var preURL = response;
+            console.log(preURL)
+
+            //START PUT TO S3 BUCKET
+            var xhr = new XMLHttpRequest();
+            xhr.open('PUT', preURL, true);
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    console.log('Tis gelukt e!');
+                }
+            };
+            xhr.onerror = () => {
+                console.log('Kapoet')
+            };
+            xhr.send(file);
+            console.log(response);
+        });
+
+    }
+
+    var HttpClient = function () {
+        this.get = function (aUrl, aCallback) {
+            var anHttpRequest = new XMLHttpRequest();
+            anHttpRequest.onreadystatechange = function () {
+                if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
+                    aCallback(anHttpRequest.responseText);
+            }
+
+            anHttpRequest.open("GET", aUrl, true);
+            anHttpRequest.send(null);
+        }
+    }
+
+</script>
+
+</html>
